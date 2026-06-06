@@ -1,0 +1,63 @@
+# Flask Core
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Database
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+
+# Caching
+Flask-Caching==2.1.0
+
+# Forms & Validation
+Flask-WTF==1.2.1
+WTForms==3.1.1
+email-validator==2.1.0
+
+# Image Processing
+Pillow==10.1.0
+numpy==1.26.2
+opencv-python==4.8.1.78
+
+# Scientific Computing
+scipy==1.11.4
+matplotlib==3.8.2
+
+# Utilities
+python-dotenv==1.0.0
+
+# Development (optional)
+pytest==7.4.3
+pytest-flask==1.3.0
+
+# Flask Core
+Flask
+Werkzeug
+
+# Database
+Flask-SQLAlchemy
+Flask-Migrate
+
+# Caching
+Flask-Caching
+
+# Forms & Validation
+Flask-WTF
+WTForms
+email-validator
+
+# Image Processing
+Pillow
+numpy
+opencv-python
+
+# Scientific Computing
+scipy
+matplotlib
+
+# Utilities
+python-dotenv
+
+# Development (optional)
+pytest
+pytest-flask

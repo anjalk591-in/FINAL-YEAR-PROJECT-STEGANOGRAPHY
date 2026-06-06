@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Batch Results - StegAnalyzer Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('batch.upload') }}">Batch</a></li>
+                <li class="breadcrumb-item active">Batch #{{ batch.id }}</li>
+            </ol>
+        </nav>
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-layers"></i> {{ batch.name }}
+        </h1>
+        <p class="text-muted">
+            Created: {{ batch.created_at | datetime }}
+            {% if batch.completed_at %} • Completed: {{ batch.completed_at | datetime }}{% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <h3 class="stat-value">{{ batch.total_images }}</h3>
+            <p class="stat-label">
+                <i class="bi bi-file-image"></i> Total Images
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <h3 class="stat-value">{{ stats.total_detections }}</h3>
+            <p class="stat-label">
+                <i class="bi bi-exclamation-triangle"></i> Detections Found
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <h3 class="stat-value">{{ stats.avg_confidence }}%</h3>
+            <p class="stat-label">
+                <i class="bi bi-graph-up"></i> Avg Confidence
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <h3 class="stat-value">{{ stats.detection_rate }}%</h3>
+            <p class="stat-label">
+                <i class="bi bi-percent"></i> Detection Rate
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Progress -->
+{% if batch.status != 'completed' %}
+<div class="card card-custom mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">Processing Status</h5>
+            <span class="badge bg-primary">{{ batch.status }}</span>
+        </div>
+        <div class="progress" style="height: 25px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                 role="progressbar" 
+                 style="width: {{ batch.progress }}%">
+                {{ batch.completed }}/{{ batch.total_images }} ({{ batch.progress }}%)
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Results Table -->
+<div class="card card-custom">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0">
+            <i class="bi bi-table"></i> Analysis Results
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        {% if analyses %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Filename</th>
+                        <th>Dimensions</th>
+                        <th>Verdict</th>
+                        <th>Confidence</th>
+                        <th>Processing Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for analysis in analyses %}
+                    <tr>
+                        <td class="text-muted">{{ loop.index }}</td>
+                        <td>
+                            <i class="bi bi-file-image text-primary"></i>
+                            <strong>{{ analysis.filename }}</strong>
+                        </td>
+                        <td class="text-muted small">
+                            {{ analysis.image_width }}×{{ analysis.image_height }}
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ analysis.verdict.lower() }} rounded-pill">
+                                {{ analysis.verdict }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 8px; width: 100px;">
+                                    <div class="progress-bar bg-{{ analysis.confidence | confidence_class }}" 
+                                         style="width: {{ analysis.confidence }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ analysis.confidence }}%</small>
+                            </div>
+                        </td>
+                        <td class="text-muted small">
+                            {% if analysis.processing_time %}
+                                {{ "%.2f"|format(analysis.processing_time) }}s
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('analysis.view_result', analysis_id=analysis.id) }}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="{{ url_for('analysis.download_image', analysis_id=analysis.id) }}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-hourglass-split" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">No results yet. Processing...</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Summary by Verdict -->
+{% if analyses %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card card-custom">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-pie-chart"></i> Summary by Verdict
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    {% set verdict_counts = {} %}
+                    {% for analysis in analyses %}
+                        {% set _ = verdict_counts.update({analysis.verdict: verdict_counts.get(analysis.verdict, 0) + 1}) %}
+                    {% endfor %}
+                    
+                    <div class="col-md-2">
+                        <h3 class="text-danger">{{ verdict_counts.get('CRITICAL', 0) }}</h3>
+                        <p class="text-muted small mb-0">Critical</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="text-warning">{{ verdict_counts.get('HIGH', 0) }}</h3>
+                        <p class="text-muted small mb-0">High</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="text-info">{{ verdict_counts.get('MEDIUM', 0) }}</h3>
+                        <p class="text-muted small mb-0">Medium</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="text-secondary">{{ verdict_counts.get('LOW', 0) }}</h3>
+                        <p class="text-muted small mb-0">Low</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="text-success">{{ verdict_counts.get('CLEAN', 0) }}</h3>
+                        <p class="text-muted small mb-0">Clean</p>
+                    </div>
+                    <div class="col-md-2">
+                        <h3 class="text-primary">{{ batch.total_images }}</h3>
+                        <p class="text-muted small mb-0">Total</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

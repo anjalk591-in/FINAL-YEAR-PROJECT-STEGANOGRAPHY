@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Decode Image - StegAnalyzer Pro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-unlock me-2"></i>Decode Image</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">Upload an encoded PNG, JPG, or GIF image to extract the hidden message inside
+                    it.</p>
+
+                <form method="POST" enctype="multipart/form-data" action="{{ url_for('steg.decode') }}">
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Encoded Image (PNG, JPG, GIF)</label>
+                        <input class="form-control" type="file" id="image" name="image" accept=".png,.jpg,.jpeg,.gif"
+                            required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="technique" class="form-label">Steganography Technique</label>
+                        <select class="form-select" id="technique" name="technique">
+                            <option value="lsb">Standard LSB (Least Significant Bit)</option>
+                            <option value="dwt">PVD (Pixel Value Difference)</option>
+                            <!-- <option value="spread_spectrum">Spread Spectrum</option> -->
+                            <option value="palette">Palette-Based (GIF/Indexed)</option>
+                        </select>
+                        <small class="text-muted">Must match the technique used during encoding.</small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-search me-2"></i>Decode Image
+                        </button>
+                    </div>
+                </form>
+
+                {% if decoded_message %}
+                <div class="mt-5">
+                    <h5 class="text-success"><i class="fas fa-check-circle me-2"></i>Hidden Message Found:</h5>
+                    <div class="p-4 bg-light border rounded">
+                        <pre class="mb-0 text-wrap" style="font-family: inherit;">{{ decoded_message }}</pre>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

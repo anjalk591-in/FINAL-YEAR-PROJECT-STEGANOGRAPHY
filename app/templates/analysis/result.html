@@ -1,0 +1,572 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Result - StegAnalyzer Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .confidence-meter {
+        width: 200px;
+        height: 200px;
+        position: relative;
+        margin: 0 auto;
+    }
+    
+    .confidence-circle {
+        transform: rotate(-90deg);
+    }
+    
+    .confidence-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    
+    .test-result-item {
+        padding: 1rem;
+        border-left: 4px solid #e5e7eb;
+        margin-bottom: 1rem;
+        background: #f9fafb;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .test-result-item.suspicious {
+        border-left-color: #ef4444;
+        background: #fef2f2;
+    }
+    
+    .extraction-preview {
+        background: #1f2937;
+        color: #f3f4f6;
+        padding: 1rem;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        max-height: 300px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Analysis Result</li>
+            </ol>
+        </nav>
+        <h1 class="display-6 fw-bold">
+            <i class="bi bi-file-image"></i> {{ analysis.filename }}
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column - Image & Basic Info -->
+    <div class="col-lg-4">
+        <div class="card card-custom mb-3">
+            <div class="card-body text-center">
+                <img src="{{ url_for('analysis.download_image', analysis_id=analysis.id) }}" 
+                     class="img-fluid rounded mb-3" 
+                     alt="{{ analysis.filename }}"
+                     style="max-height: 400px; object-fit: contain;">
+                
+                <h6 class="text-muted">{{ analysis.image_width }} × {{ analysis.image_height }} pixels</h6>
+                <p class="text-muted small mb-0">{{ analysis.filesize | filesize }}</p>
+            </div>
+        </div>
+        
+        <div class="card card-custom">
+            <div class="card-body">
+                <h6 class="mb-3">Quick Actions</h6>
+                
+                <a href="{{ url_for('analysis.download_image', analysis_id=analysis.id) }}" 
+                   class="btn btn-outline-primary btn-sm w-100 mb-2">
+                    <i class="bi bi-download"></i> Download Image
+                </a>
+                
+                <form method="POST" action="{{ url_for('analysis.reanalyze', analysis_id=analysis.id) }}" class="mb-2">
+                    <select name="scan_type" class="form-select form-select-sm mb-2">
+                        <option value="quick">Quick Scan</option>
+                        <option value="standard" selected>Standard Scan</option>
+                        <option value="deep">Deep Scan</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-arrow-clockwise"></i> Re-analyze
+                    </button>
+                </form>
+                
+                <form method="POST" action="{{ url_for('analysis.delete', analysis_id=analysis.id) }}" 
+                      onsubmit="return confirm('Are you sure you want to delete this analysis?');">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column - Analysis Results -->
+    <div class="col-lg-8">
+        <!-- Verdict Card -->
+        <div class="card card-custom mb-4">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center">
+                        <!-- Confidence Meter -->
+                        <div class="confidence-meter">
+                            <svg width="200" height="200">
+                                <circle cx="100" cy="100" r="90" fill="none" stroke="#e5e7eb" stroke-width="15"/>
+                                <circle cx="100" cy="100" r="90" fill="none" 
+                                    stroke="{% if analysis.confidence >= 90 %}#ef4444{% elif analysis.confidence >= 70 %}#f59e0b{% elif analysis.confidence >= 50 %}#3b82f6{% else %}#10b981{% endif %}" 
+                                    stroke-width="15" 
+                                    stroke-dasharray="{{ (analysis.confidence / 100 * 565) }} 565"
+                                    stroke-linecap="round"
+                                    transform="rotate(-90 100 100)"/>
+                            </svg>
+                            <div class="confidence-text">
+                                <h2 class="mb-0">{{ analysis.confidence }}%</h2>
+                                <small class="text-muted">Confidence</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <h3 class="mb-3">
+                            <span class="badge badge-{{ analysis.verdict.lower() }} fs-5">
+                                {{ analysis.verdict }}
+                            </span>
+                        </h3>
+                        
+                        {% if analysis.verdict == 'CRITICAL' %}
+                        <p class="mb-0">
+                            <i class="bi bi-exclamation-triangle text-danger"></i>
+                            <strong>High probability of steganography detected.</strong> 
+                            Multiple indicators suggest hidden data is present.
+                        </p>
+                        {% elif analysis.verdict == 'HIGH' %}
+                        <p class="mb-0">
+                            <i class="bi bi-exclamation-circle text-warning"></i>
+                            <strong>Likely steganography detected.</strong> 
+                            Several suspicious patterns found.
+                        </p>
+                        {% elif analysis.verdict == 'MEDIUM' %}
+                        <p class="mb-0">
+                            <i class="bi bi-info-circle text-info"></i>
+                            <strong>Suspicious patterns detected.</strong> 
+                            Further investigation recommended.
+                        </p>
+                        {% elif analysis.verdict == 'LOW' %}
+                        <p class="mb-0">
+                            <i class="bi bi-check-circle text-secondary"></i>
+                            <strong>Minimal indicators found.</strong> 
+                            Possibly false positive.
+                        </p>
+                        {% else %}
+                        <p class="mb-0">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>No steganography detected.</strong> 
+                            Image appears clean.
+                        </p>
+                        {% endif %}
+                        
+                        <hr>
+                        
+                        <div class="row small text-muted">
+                            <div class="col-6">
+                                <strong>Scan Type:</strong> {{ analysis.scan_type | capitalize }}
+                            </div>
+                            <div class="col-6">
+                                <strong>Processing Time:</strong> {{ "%.2f"|format(analysis.processing_time) }}s
+                            </div>
+                            <div class="col-12 mt-2">
+                                <strong>Analyzed:</strong> {{ analysis.timestamp | datetime }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistical Results -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart"></i> Statistical Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for test_name, test_data in analysis.statistical_results.items() %}
+                <div class="test-result-item {% if test_data.suspicious %}suspicious{% endif %}">
+                    <h6 class="mb-2">{{ test_name | replace('_', ' ') | title }}</h6>
+                    
+                    {% if test_name == 'lsb_distribution' %}
+                    <p class="mb-1 small">
+                        <strong>Ratio:</strong> {{ "%.3f"|format(test_data.ratio) }} 
+                        (Expected: ~0.500 for random)
+                    </p>
+                    {% elif test_name == 'chi_square' %}
+                    <p class="mb-1 small">
+                        <strong>P-value:</strong> {{ "%.4f"|format(test_data.p_value) }} 
+                        (Suspicious if < 0.05)
+                    </p>
+                    {% elif test_name == 'entropy' %}
+                    <p class="mb-1 small">
+                        <strong>Average Entropy:</strong> {{ "%.3f"|format(test_data.average_entropy) }} 
+                        (Suspicious if > 7.5)
+                    </p>
+                    {% elif test_name == 'rs_analysis' %}
+                    <p class="mb-1 small">
+                        <strong>RS Difference:</strong> {{ "%.4f"|format(test_data.rs_difference) }} 
+                        (Suspicious if > 0.05)
+                    </p>
+                    {% elif test_name == 'spa' %}
+                    <p class="mb-1 small">
+                        <strong>Embedding Rate:</strong> {{ "%.2f"|format(test_data.estimated_embedding_rate * 100) }}% 
+                        (Suspicious if > 10%)
+                    </p>
+                    {% elif test_name == 'dct_analysis' %}
+                    <p class="mb-1 small">
+                        <strong>DCT Coefficient Analysis</strong> <span class="badge badge-info">JPEG</span><br>
+                        <strong>Suspicious Indicators:</strong> {{ test_data.get('suspicious_indicators', 0) }}/3<br>
+                        {% if test_data.get('histogram_analysis') %}
+                        <strong>Histogram Anomalies:</strong> {{ test_data.histogram_analysis.get('pair_anomalies', 0) }} 
+                        {% if test_data.histogram_analysis.get('suspicious') %}<span class="text-danger">⚠</span>{% endif %}<br>
+                        {% endif %}
+                        {% if test_data.get('lsb_analysis') %}
+                        <strong>DCT LSB Ratio:</strong> {{ "%.4f"|format(test_data.lsb_analysis.get('lsb_ratio', 0)) }} 
+                        {% if test_data.lsb_analysis.get('suspicious') %}<span class="text-danger">⚠</span>{% endif %}<br>
+                        {% endif %}
+                        {% if test_data.get('blockiness_analysis') %}
+                        <strong>Blockiness:</strong> {{ "%.2f"|format(test_data.blockiness_analysis.get('blockiness_ratio', 0)) }}
+                        {% if test_data.blockiness_analysis.get('suspicious') %}<span class="text-danger">⚠</span>{% endif %}
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                    
+                    <span class="badge {% if test_data.suspicious %}bg-danger{% else %}bg-success{% endif %}">
+                        {% if test_data.suspicious %}Suspicious{% else %}Normal{% endif %}
+                    </span>
+                    {% if test_data.confidence %}
+                    <small class="text-muted">({{ "%.0f"|format(test_data.confidence * 100) }}% confidence)</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- DCT Analysis (JPEG Only) -->
+        {% if analysis.statistical_results and analysis.statistical_results.get('dct_analysis') and not analysis.statistical_results.get('dct_analysis').get('error') %}
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-grid-3x3"></i> DCT Coefficient Analysis 
+                    <span class="badge badge-info">JPEG Steganography Detection</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% set dct = analysis.statistical_results.dct_analysis %}
+                
+                <!-- Overall Status -->
+                <div class="alert {% if dct.suspicious %}alert-danger{% else %}alert-success{% endif %} mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            {% if dct.suspicious %}
+                            <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+                            {% else %}
+                            <i class="bi bi-check-circle-fill fs-3"></i>
+                            {% endif %}
+                        </div>
+                        <div class="col">
+                            <strong>
+                                {% if dct.suspicious %}
+                                DCT Anomalies Detected
+                                {% else %}
+                                No DCT Anomalies Detected
+                                {% endif %}
+                            </strong>
+                            <p class="mb-0 small">
+                                Confidence: {{ "%.0f"|format(dct.confidence * 100) }}% | 
+                                Suspicious Indicators: {{ dct.suspicious_indicators }}/3
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detailed Analysis -->
+                <div class="row">
+                    <!-- Histogram Analysis -->
+                    {% if dct.get('histogram_analysis') %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 {% if dct.histogram_analysis.suspicious %}border-danger{% else %}border-success{% endif %}">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-bar-chart"></i> Histogram Analysis
+                                    {% if dct.histogram_analysis.suspicious %}
+                                    <span class="badge bg-danger">Suspicious</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Normal</span>
+                                    {% endif %}
+                                </h6>
+                                <p class="small mb-2">
+                                    Detects JSteg-style steganography by analyzing DCT coefficient pair frequencies.
+                                </p>
+                                <hr>
+                                <p class="mb-1 small">
+                                    <strong>Pair Anomalies:</strong> {{ dct.histogram_analysis.pair_anomalies }}
+                                </p>
+                                <p class="mb-0 text-muted small">
+                                    Threshold: > 5 anomalies
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- LSB Analysis -->
+                    {% if dct.get('lsb_analysis') %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 {% if dct.lsb_analysis.suspicious %}border-danger{% else %}border-success{% endif %}">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-filter-circle"></i> LSB Distribution
+                                    {% if dct.lsb_analysis.suspicious %}
+                                    <span class="badge bg-danger">Suspicious</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Normal</span>
+                                    {% endif %}
+                                </h6>
+                                <p class="small mb-2">
+                                    Analyzes the balance of LSBs in DCT coefficients. Perfect balance suggests embedding.
+                                </p>
+                                <hr>
+                                <p class="mb-1 small">
+                                    <strong>LSB Ratio:</strong> {{ "%.4f"|format(dct.lsb_analysis.lsb_ratio) }}
+                                </p>
+                                <p class="mb-0 text-muted small">
+                                    Natural: 0.48-0.52 | Stego: 0.495-0.505
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Blockiness Analysis -->
+                    {% if dct.get('blockiness_analysis') %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 {% if dct.blockiness_analysis.suspicious %}border-danger{% else %}border-success{% endif %}">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-grid"></i> Blockiness
+                                    {% if dct.blockiness_analysis.suspicious %}
+                                    <span class="badge bg-danger">Suspicious</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Normal</span>
+                                    {% endif %}
+                                </h6>
+                                <p class="small mb-2">
+                                    Detects F5-style steganography. F5 reduces JPEG blocking artifacts.
+                                </p>
+                                <hr>
+                                <p class="mb-1 small">
+                                    <strong>Blockiness Ratio:</strong> {{ "%.2f"|format(dct.blockiness_analysis.blockiness_ratio) }}
+                                </p>
+                                <p class="mb-0 text-muted small">
+                                    Normal: > 1.1 | F5-style: < 1.1
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- DCT Statistics -->
+                <div class="card bg-light mt-3">
+                    <div class="card-body">
+                        <h6 class="mb-3"><i class="bi bi-info-circle"></i> DCT Coefficient Statistics</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p class="mb-1 small">
+                                    <strong>Total Coefficients:</strong> {{ "{:,}".format(dct.total_coefficients) }}
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-1 small">
+                                    <strong>Zero Coefficients:</strong> {{ "{:,}".format(dct.zero_coefficients) }}
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-1 small">
+                                    <strong>Zero Ratio:</strong> {{ "%.2f"|format(dct.zero_ratio * 100) }}%
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Methods Explanation -->
+                <div class="alert alert-info mt-3 mb-0">
+                    <strong><i class="bi bi-lightbulb"></i> About DCT Analysis:</strong>
+                    DCT (Discrete Cosine Transform) analysis is specifically designed to detect steganography in JPEG images. 
+                    It examines the frequency domain coefficients where tools like JSteg, F5, and OutGuess hide data. 
+                    This analysis is only performed on JPEG images.
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Extraction Results -->
+        {% if analysis.extraction_results %}
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-text"></i> Data Extraction Results
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if analysis.extraction_results.get('found') %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Hidden data detected!</strong> 
+                    Extraction method: {{ analysis.extraction_results.get('method', 'Unknown') | replace('_', ' ') | title }}
+                    {% if analysis.extraction_results.get('method', '').startswith('dct') %}
+                    <span class="badge badge-info ms-2">DCT-based</span>
+                    {% endif %}
+                </div>
+                
+                <p class="mb-2">
+                    <strong>Readability Score:</strong> 
+                    {{ "%.2f"|format((analysis.extraction_results.get('readability', 0) or 0) * 100) }}%
+                </p>
+                
+                <h6 class="mt-3 mb-2">Preview:</h6>
+                <div class="extraction-preview">{{ analysis.extraction_results.get('preview', 'No data extracted') }}</div>
+                
+                {% if analysis.extraction_results.get('text') and analysis.extraction_results.get('text')|length > 200 %}
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#fullExtraction">
+                        Show Full Extracted Text
+                    </button>
+                    <div class="collapse mt-2" id="fullExtraction">
+                        <div class="extraction-preview" style="max-height: 400px;">
+                            {{ analysis.extraction_results.get('text', '') }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    <strong>No hidden data found.</strong> 
+                    Extraction attempts did not reveal any readable content.
+                </div>
+                <p class="text-muted small mb-0">
+                    Best extraction readability score: {{ "%.2f"|format((analysis.extraction_results.get('readability', 0) or 0) * 100) }}%
+                    (Threshold: 60%)
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Visual & Format Analysis -->
+        {% if analysis.visual_results or analysis.format_results %}
+        <div class="card card-custom">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-eye"></i> Additional Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if analysis.visual_results %}
+                <h6>Visual Analysis</h6>
+                <div class="test-result-item {% if analysis.visual_results.suspicious %}suspicious{% endif %}">
+                    <p class="mb-1 small">
+                        <strong>LSB Variance:</strong> {{ "%.4f"|format(analysis.visual_results.lsb_variance) }}
+                    </p>
+                    <span class="badge {% if analysis.visual_results.suspicious %}bg-danger{% else %}bg-success{% endif %}">
+                        {% if analysis.visual_results.suspicious %}Suspicious{% else %}Normal{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% if analysis.format_results %}
+                <h6 class="mt-3">Format Analysis</h6>
+                <div class="test-result-item {% if analysis.format_results.suspicious %}suspicious{% endif %}">
+                    <p class="mb-1 small">
+                        <strong>Format:</strong> {{ analysis.format_results.format }}<br>
+                        <strong>Size Ratio:</strong> {{ "%.2f"|format(analysis.format_results.size_ratio) }}
+                    </p>
+                    <span class="badge {% if analysis.format_results.suspicious %}bg-danger{% else %}bg-success{% endif %}">
+                        {% if analysis.format_results.suspicious %}Suspicious{% else %}Normal{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Visualizations -->
+        {% if analysis.visualizations.count() > 0 %}
+        <div class="card card-custom mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-image"></i> Visual Analysis & Heat Maps
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    {% for viz in analysis.visualizations %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if loop.first %}active{% endif %}" 
+                                id="{{ viz.viz_type }}-tab" 
+                                data-bs-toggle="tab" 
+                                data-bs-target="#{{ viz.viz_type }}" 
+                                type="button">
+                            {{ viz.viz_type | replace('_', ' ') | title }}
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+                
+                <div class="tab-content">
+                    {% for viz in analysis.visualizations %}
+                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                         id="{{ viz.viz_type }}" 
+                         role="tabpanel">
+                        <div class="text-center">
+                            <img src="{{ url_for('analysis.view_visualization', viz_id=viz.id) }}" 
+                                 class="img-fluid rounded" 
+                                 alt="{{ viz.viz_type }}"
+                                 style="max-width: 100%; height: auto;">
+                        </div>
+                        
+                        {% if viz.viz_type == 'heatmap' %}
+                        <div class="alert alert-info mt-3">
+                            <strong>Heat Map Explanation:</strong> Red/bright areas indicate regions with high suspicion scores. 
+                            These areas have LSB patterns that deviate from natural randomness.
+                        </div>
+                        {% elif viz.viz_type == 'bitplanes' %}
+                        <div class="alert alert-info mt-3">
+                            <strong>Bit Planes Explanation:</strong> Shows all 8 bit planes. The LSB (Bit 0) should appear random. 
+                            Structured patterns in lower bit planes may indicate steganography.
+                        </div>
+                        {% elif viz.viz_type == 'lsb_plane' %}
+                        <div class="alert alert-info mt-3">
+                            <strong>LSB Plane Explanation:</strong> Visualization of the least significant bits. 
+                            Random noise is expected. Any visible patterns or images suggest hidden data.
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

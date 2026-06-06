@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Encode Text in Image - StegAnalyzer Pro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-lock me-2"></i>Encode Text in Image</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">Upload an image and enter the secret text you want to hide inside it. The
+                    output will be a PNG image containing your hidden message.</p>
+
+                <form method="POST" enctype="multipart/form-data" action="{{ url_for('steg.encode') }}">
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Cover Image (PNG, JPG)</label>
+                        <input class="form-control" type="file" id="image" name="image" accept=".png,.jpg,.jpeg,.gif"
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="technique" class="form-label">Steganography Technique</label>
+                        <select class="form-select" id="technique" name="technique">
+                            <option value="lsb">Standard LSB (Least Significant Bit)</option>
+                            <option value="dwt">PVD (Pixel Value Difference)</option>
+                            <!-- <option value="spread_spectrum">Spread Spectrum</option> -->
+                            <option value="palette">Palette-Based (GIF/Indexed)</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="secret_text" class="form-label">Secret Text</label>
+                        <textarea class="form-control" id="secret_text" name="secret_text" rows="5"
+                            placeholder="Enter the text you want to hide..." required></textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-magic me-2"></i>Encode and Download
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

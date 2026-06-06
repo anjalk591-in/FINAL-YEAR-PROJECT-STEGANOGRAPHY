@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Help - StegAnalyzer Pro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <h1 class="display-5 fw-bold mb-4">
+            <i class="bi bi-question-circle"></i> Help & Documentation
+        </h1>
+        
+        <!-- Quick Start -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="bi bi-rocket"></i> Quick Start Guide</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="mb-3">
+                            <i class="bi bi-cloud-upload" style="font-size: 3rem; color: #6366f1;"></i>
+                        </div>
+                        <h5>1. Upload</h5>
+                        <p class="text-muted small">
+                            Click "Upload" and select an image file or drag & drop
+                        </p>
+                    </div>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="mb-3">
+                            <i class="bi bi-sliders" style="font-size: 3rem; color: #8b5cf6;"></i>
+                        </div>
+                        <h5>2. Choose Scan</h5>
+                        <p class="text-muted small">
+                            Select Quick, Standard, or Deep scan type
+                        </p>
+                    </div>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="mb-3">
+                            <i class="bi bi-gear" style="font-size: 3rem; color: #ec4899;"></i>
+                        </div>
+                        <h5>3. Analyze</h5>
+                        <p class="text-muted small">
+                            Click "Analyze Image" and wait for results
+                        </p>
+                    </div>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="mb-3">
+                            <i class="bi bi-eye" style="font-size: 3rem; color: #10b981;"></i>
+                        </div>
+                        <h5>4. Review</h5>
+                        <p class="text-muted small">
+                            View detailed results and confidence score
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Understanding Results -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="bi bi-bar-chart"></i> Understanding Results</h4>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="mb-3">Verdict Levels</h5>
+                
+                <div class="mb-3 p-3" style="background: #fef2f2; border-left: 4px solid #ef4444;">
+                    <h6><span class="badge badge-critical">CRITICAL</span></h6>
+                    <p class="mb-0 text-muted small">
+                        <strong>High probability of steganography detected.</strong><br>
+                        Multiple strong indicators suggest hidden data is present. Immediate investigation recommended.
+                    </p>
+                </div>
+                
+                <div class="mb-3 p-3" style="background: #fffbeb; border-left: 4px solid #f59e0b;">
+                    <h6><span class="badge badge-high">HIGH</span></h6>
+                    <p class="mb-0 text-muted small">
+                        <strong>Likely steganography detected.</strong><br>
+                        Several suspicious patterns found. Further analysis recommended.
+                    </p>
+                </div>
+                
+                <div class="mb-3 p-3" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
+                    <h6><span class="badge badge-medium">MEDIUM</span></h6>
+                    <p class="mb-0 text-muted small">
+                        <strong>Suspicious patterns detected.</strong><br>
+                        Some indicators present but not conclusive. May warrant closer inspection.
+                    </p>
+                </div>
+                
+                <div class="mb-3 p-3" style="background: #f3f4f6; border-left: 4px solid #6b7280;">
+                    <h6><span class="badge badge-low">LOW</span></h6>
+                    <p class="mb-0 text-muted small">
+                        <strong>Minimal indicators found.</strong><br>
+                        Few weak indicators, possibly false positives. Likely clean.
+                    </p>
+                </div>
+                
+                <div class="mb-3 p-3" style="background: #f0fdf4; border-left: 4px solid #10b981;">
+                    <h6><span class="badge badge-clean">CLEAN</span></h6>
+                    <p class="mb-0 text-muted small">
+                        <strong>No steganography detected.</strong><br>
+                        Image appears clean with no suspicious patterns.
+                    </p>
+                </div>
+                
+                <h5 class="mb-3 mt-4">Confidence Score</h5>
+                <p class="text-muted">
+                    The confidence score (0-100%) indicates how certain the system is about the verdict. 
+                    Higher scores mean stronger evidence. The score is calculated by combining results 
+                    from all detection methods with weighted importance.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Scan Types -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="bi bi-speedometer2"></i> Scan Types</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Scan Type</th>
+                                <th>Duration</th>
+                                <th>Tests Performed</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Quick</strong></td>
+                                <td>~2-5 seconds</td>
+                                <td>LSB, Chi-Square, Entropy, Quick Extraction</td>
+                                <td>Initial screening, large batches</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td><strong>Standard ⭐</strong></td>
+                                <td>~5-15 seconds</td>
+                                <td>All statistical tests, visual analysis, full extraction</td>
+                                <td>Most cases (recommended)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Deep</strong></td>
+                                <td>~15-45 seconds</td>
+                                <td>All tests + multi-bit extraction + comprehensive analysis</td>
+                                <td>Thorough investigation, forensics</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detection Methods -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="bi bi-search"></i> Detection Methods</h4>
+            </div>
+            <div class="card-body p-4">
+                <h6>LSB Distribution Analysis</h6>
+                <p class="text-muted small mb-3">
+                    Examines the distribution of least significant bits. Steganography often produces 
+                    a near-perfect 50/50 distribution, which is statistically unusual in natural images.
+                </p>
+                
+                <h6>Chi-Square Test</h6>
+                <p class="text-muted small mb-3">
+                    Statistical test that detects unusual patterns in pixel value distributions, 
+                    particularly in Pairs of Values (PoV) that differ by 1.
+                </p>
+                
+                <h6>RS Analysis</h6>
+                <p class="text-muted small mb-3">
+                    Regular-Singular analysis examines how pixel correlations change when LSBs are flipped. 
+                    One of the most reliable LSB detection methods.
+                </p>
+                
+                <h6>Sample Pair Analysis (SPA)</h6>
+                <p class="text-muted small mb-3">
+                    Advanced statistical method that analyzes sample pairs to estimate the embedding rate. 
+                    More sensitive than chi-square testing.
+                </p>
+                
+                <h6>Entropy Analysis</h6>
+                <p class="text-muted small mb-3">
+                    Measures information density using Shannon entropy. High entropy in LSB planes 
+                    can indicate hidden data.
+                </p>
+                
+                <h6>Data Extraction</h6>
+                <p class="text-muted small mb-3">
+                    Attempts to extract hidden messages using common LSB steganography methods across 
+                    different color channels and bit depths.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Batch Processing -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="bi bi-layers"></i> Batch Processing</h4>
+            </div>
+            <div class="card-body p-4">
+                <h6>How to Use Batch Processing</h6>
+                <ol>
+                    <li>Navigate to "Batch Upload" from the main menu</li>
+                    <li>Select multiple image files (up to 100)</li>
+                    <li>Choose your preferred scan type</li>
+                    <li>Click "Process Batch"</li>
+                    <li>Wait for all images to be analyzed</li>
+                    <li>View results in a summary table</li>
+                </ol>
+                
+                <h6 class="mt-3">Tips</h6>
+                <ul>
+                    <li>Use Quick scan for large batches to save time</li>
+                    <li>Maximum file size: 50MB per image</li>
+                    <li>Estimated time: number of images × scan time</li>
+                    <li>All results are saved to your history</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- API Usage -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="bi bi-code-square"></i> API Usage</h4>
+            </div>
+            <div class="card-body p-4">
+                <h6>REST API Endpoints</h6>
+                
+                <div class="mb-3">
+                    <code class="d-block bg-light p-2 rounded">POST /api/analyze</code>
+                    <p class="text-muted small mb-0 mt-1">Upload and analyze a single image</p>
+                </div>
+                
+                <div class="mb-3">
+                    <code class="d-block bg-light p-2 rounded">GET /api/analysis/&lt;id&gt;</code>
+                    <p class="text-muted small mb-0 mt-1">Get analysis results by ID</p>
+                </div>
+                
+                <div class="mb-3">
+                    <code class="d-block bg-light p-2 rounded">GET /api/analyses</code>
+                    <p class="text-muted small mb-0 mt-1">List all analyses with optional filters</p>
+                </div>
+                
+                <div class="mb-3">
+                    <code class="d-block bg-light p-2 rounded">GET /api/stats</code>
+                    <p class="text-muted small mb-0 mt-1">Get overall statistics</p>
+                </div>
+                
+                <h6 class="mt-4">Example: Analyze Image</h6>
+                <pre class="bg-dark text-light p-3 rounded"><code>curl -X POST http://localhost:5000/api/analyze \
+  -F "image=@suspicious.png" \
+  -F "scan_type=standard"</code></pre>
+                
+                <p class="text-muted small mt-2">
+                    For complete API documentation, see the README.md file.
+                </p>
+            </div>
+        </div>
+        
+        <!-- FAQ -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="bi bi-patch-question"></i> Frequently Asked Questions</h4>
+            </div>
+            <div class="card-body p-4">
+                <h6>Q: What file formats are supported?</h6>
+                <p class="text-muted small">A: PNG, JPEG, JPG, BMP, GIF, and TIFF files are supported.</p>
+                
+                <h6>Q: What's the maximum file size?</h6>
+                <p class="text-muted small">A: The default maximum is 50MB per image.</p>
+                
+                <h6>Q: How accurate is the detection?</h6>
+                <p class="text-muted small">A: The system achieves >85% accuracy for common LSB steganography methods. Deep scan provides the most accurate results.</p>
+                
+                <h6>Q: Can it detect encrypted messages?</h6>
+                <p class="text-muted small">A: The tool can detect that data is hidden but cannot decrypt encrypted payloads. It will show low readability scores for encrypted content.</p>
+                
+                <h6>Q: How long are analyses stored?</h6>
+                <p class="text-muted small">A: By default, analyses are stored indefinitely. You can manually delete them or use the cleanup command to remove old files.</p>
+                
+                <h6>Q: Is my data secure?</h6>
+                <p class="text-muted small">A: All processing happens locally on your server. No data is sent to external services.</p>
+            </div>
+        </div>
+        
+        <!-- Troubleshooting -->
+        <div class="card card-custom">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="bi bi-tools"></i> Troubleshooting</h4>
+            </div>
+            <div class="card-body p-4">
+                <h6>Upload fails or returns error</h6>
+                <ul class="text-muted small">
+                    <li>Check that file size is under 50MB</li>
+                    <li>Ensure file format is supported</li>
+                    <li>Try a different image format</li>
+                </ul>
+                
+                <h6>Analysis takes too long</h6>
+                <ul class="text-muted small">
+                    <li>Try using Quick scan instead of Deep scan</li>
+                    <li>Check server resources and CPU usage</li>
+                    <li>Reduce image size if very large</li>
+                </ul>
+                
+                <h6>False positives</h6>
+                <ul class="text-muted small">
+                    <li>Some natural images may trigger detection</li>
+                    <li>Use Deep scan for more accurate results</li>
+                    <li>Check extraction results - false positives rarely have readable extracted data</li>
+                </ul>
+                
+                <p class="mt-3 mb-0">
+                    <strong>Need more help?</strong> Check the complete documentation in README.md or SETUP_GUIDE.md
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

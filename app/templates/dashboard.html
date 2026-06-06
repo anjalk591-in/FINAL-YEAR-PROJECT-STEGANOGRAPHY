@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - StegAnalyzer Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h1>
+        <p class="lead text-muted">Welcome to StegAnalyzer Pro - Advanced Steganography Detection</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <h3 class="stat-value">{{ stats.total_scans }}</h3>
+            <p class="stat-label">
+                <i class="bi bi-file-image"></i> Total Scans
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <h3 class="stat-value">{{ stats.total_detections }}</h3>
+            <p class="stat-label">
+                <i class="bi bi-exclamation-triangle"></i> Detections
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <h3 class="stat-value">{{ stats.avg_confidence }}%</h3>
+            <p class="stat-label">
+                <i class="bi bi-graph-up"></i> Avg Confidence
+            </p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <h3 class="stat-value">{{ stats.detection_rate }}%</h3>
+            <p class="stat-label">
+                <i class="bi bi-percent"></i> Detection Rate
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card card-custom p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-upload"></i> Quick Upload
+            </h4>
+            <p class="text-muted">Upload and analyze an image file for steganography detection</p>
+            <a href="{{ url_for('analysis.upload') }}" class="btn btn-primary btn-lg w-100">
+                <i class="bi bi-cloud-upload"></i> Upload Image
+            </a>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-custom p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-files"></i> Batch Processing
+            </h4>
+            <p class="text-muted">Analyze multiple images at once for efficient processing</p>
+            <a href="{{ url_for('batch.upload') }}" class="btn btn-primary btn-lg w-100">
+                <i class="bi bi-layers"></i> Batch Upload
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Analyses -->
+<div class="row">
+    <div class="col-12">
+        <div class="card card-custom">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Recent Analyses
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_analyses %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Filename</th>
+                                <th>Dimensions</th>
+                                <th>Verdict</th>
+                                <th>Confidence</th>
+                                <th>Timestamp</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for analysis in recent_analyses %}
+                            <tr>
+                                <td>
+                                    <i class="bi bi-file-image text-primary"></i>
+                                    <strong>{{ analysis.filename }}</strong>
+                                </td>
+                                <td class="text-muted">
+                                    {{ analysis.image_width }}×{{ analysis.image_height }}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ (analysis.verdict or 'CLEAN').lower() }} rounded-pill">
+                                        {{ analysis.verdict or 'CLEAN' }}
+                                    </span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 8px; width: 100px;">
+                                            <div class="progress-bar bg-{{ analysis.confidence | confidence_class }}" 
+                                                 style="width: {{ analysis.confidence }}%"></div>
+                                        </div>
+                                        <small class="text-muted">{{ analysis.confidence }}%</small>
+                                    </div>
+                                </td>
+                                <td class="text-muted small">
+                                    {{ analysis.timestamp | datetime('%Y-%m-%d %H:%M') }}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('analysis.view_result', analysis_id=analysis.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-3">No analyses yet. Upload an image to get started!</p>
+                    <a href="{{ url_for('analysis.upload') }}" class="btn btn-primary">
+                        <i class="bi bi-cloud-upload"></i> Upload Image
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Batches (if any) -->
+{% if recent_batches %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card card-custom">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-layers"></i> Recent Batch Jobs
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for batch in recent_batches %}
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                    <div>
+                        <strong>{{ batch.name or 'Batch #' + batch.id|string }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            {{ batch.completed }}/{{ batch.total_images }} images • 
+                            {{ batch.created_at | datetime('%Y-%m-%d %H:%M') }}
+                        </small>
+                    </div>
+                    <div>
+                        <span class="badge bg-{{ 'success' if batch.status == 'completed' else 'primary' }}">
+                            {{ batch.status }}
+                        </span>
+                        <a href="{{ url_for('batch.view_batch', batch_id=batch.id) }}" 
+                           class="btn btn-sm btn-outline-primary ms-2">
+                            View
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

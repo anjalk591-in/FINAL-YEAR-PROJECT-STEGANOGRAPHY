@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Image - StegAnalyzer Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-area {
+        border: 3px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 4rem 2rem;
+        text-align: center;
+        background: #f9fafb;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .upload-area:hover {
+        border-color: #6366f1;
+        background: #f3f4f6;
+    }
+    
+    .upload-area.drag-over {
+        border-color: #6366f1;
+        background: #eef2ff;
+    }
+    
+    .upload-icon {
+        font-size: 4rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+    
+    .file-preview {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .scan-type-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .scan-type-card:hover {
+        border-color: #6366f1;
+        background: #f3f4f6;
+    }
+    
+    .scan-type-card.active {
+        border-color: #6366f1;
+        background: #eef2ff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-cloud-upload"></i> Upload Image
+        </h1>
+        <p class="lead text-muted">Upload an image file to analyze for steganography</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card card-custom">
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <!-- Upload Area -->
+                    <div class="upload-area" id="uploadArea">
+                        <i class="bi bi-cloud-upload upload-icon"></i>
+                        <h4>Drag & Drop Image Here</h4>
+                        <p class="text-muted">or click to browse</p>
+                        <input type="file" 
+                               name="image" 
+                               id="imageInput" 
+                               accept="image/*" 
+                               style="display: none;" 
+                               required>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('imageInput').click()">
+                                <i class="bi bi-folder2-open"></i> Browse Files
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-3">
+                            Supported formats: PNG, JPG, JPEG, BMP, GIF (Max: 50MB)
+                        </small>
+                    </div>
+                    
+                    <!-- Preview Area -->
+                    <div id="previewArea" style="display: none;" class="mt-4">
+                        <h5 class="mb-3">Preview:</h5>
+                        <div class="text-center">
+                            <img id="imagePreview" class="file-preview" src="" alt="Preview">
+                        </div>
+                        <div class="mt-3">
+                            <p class="mb-1"><strong>Filename:</strong> <span id="fileName"></span></p>
+                            <p class="mb-0"><strong>Size:</strong> <span id="fileSize"></span></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Scan Type Selection -->
+                    <div class="mt-4" id="scanTypeArea" style="display: none;">
+                        <h5 class="mb-3">Select Scan Type:</h5>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="scan-type-card" data-scan-type="quick">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="radio" 
+                                               name="scan_type" 
+                                               id="quickScan" 
+                                               value="quick">
+                                        <label class="form-check-label w-100" for="quickScan">
+                                            <h6><i class="bi bi-lightning"></i> Quick Scan</h6>
+                                            <small class="text-muted">
+                                                Basic tests only<br>
+                                                ~2-5 seconds
+                                            </small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="scan-type-card active" data-scan-type="standard">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="radio" 
+                                               name="scan_type" 
+                                               id="standardScan" 
+                                               value="standard" 
+                                               checked>
+                                        <label class="form-check-label w-100" for="standardScan">
+                                            <h6><i class="bi bi-check-circle"></i> Standard Scan</h6>
+                                            <small class="text-muted">
+                                                Recommended<br>
+                                                ~5-15 seconds
+                                            </small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="scan-type-card" data-scan-type="deep">
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="radio" 
+                                               name="scan_type" 
+                                               id="deepScan" 
+                                               value="deep">
+                                        <label class="form-check-label w-100" for="deepScan">
+                                            <h6><i class="bi bi-search"></i> Deep Scan</h6>
+                                            <small class="text-muted">
+                                                All tests<br>
+                                                ~15-45 seconds
+                                            </small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="mt-4 text-center" id="submitArea" style="display: none;">
+                        <button type="submit" class="btn btn-primary btn-lg px-5" id="analyzeBtn">
+                            <i class="bi bi-search"></i> Analyze Image
+                        </button>
+                    </div>
+                    
+                    <!-- Loading Indicator -->
+                    <div id="loadingArea" style="display: none;" class="text-center mt-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Analyzing image... Please wait.</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar Info -->
+    <div class="col-lg-4">
+        <div class="card card-custom mb-3">
+            <div class="card-body">
+                <h5><i class="bi bi-info-circle"></i> How It Works</h5>
+                <ol class="mt-3 ps-3">
+                    <li class="mb-2">Upload an image file</li>
+                    <li class="mb-2">Select scan type</li>
+                    <li class="mb-2">Wait for analysis</li>
+                    <li class="mb-0">View detailed results</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="card card-custom">
+            <div class="card-body">
+                <h5><i class="bi bi-shield-check"></i> Detection Methods</h5>
+                <ul class="list-unstyled mt-3">
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success"></i> LSB Analysis
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success"></i> Chi-Square Test
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success"></i> RS Analysis
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success"></i> Entropy Analysis
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-check-circle-fill text-success"></i> Data Extraction
+                    </li>
+                    <li class="mb-0">
+                        <i class="bi bi-check-circle-fill text-success"></i> And more...
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    const uploadArea = $('#uploadArea');
+    const imageInput = $('#imageInput');
+    const previewArea = $('#previewArea');
+    const imagePreview = $('#imagePreview');
+    const scanTypeArea = $('#scanTypeArea');
+    const submitArea = $('#submitArea');
+    const loadingArea = $('#loadingArea');
+    const uploadForm = $('#uploadForm');
+    
+    // Click to upload
+    uploadArea.on('click', function() {
+        imageInput.click();
+    });
+    
+    // Drag and drop
+    uploadArea.on('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('drag-over');
+    });
+    
+    uploadArea.on('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('drag-over');
+    });
+    
+    uploadArea.on('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('drag-over');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            imageInput[0].files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    // File input change
+    imageInput.on('change', function() {
+        if (this.files.length > 0) {
+            handleFileSelect(this.files[0]);
+        }
+    });
+    
+    // Handle file selection
+    function handleFileSelect(file) {
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imagePreview.attr('src', e.target.result);
+            previewArea.show();
+            scanTypeArea.show();
+            submitArea.show();
+        };
+        reader.readAsDataURL(file);
+        
+        // Show file info
+        $('#fileName').text(file.name);
+        $('#fileSize').text((file.size / 1024 / 1024).toFixed(2) + ' MB');
+    }
+    
+    // Scan type card selection
+    $('.scan-type-card').on('click', function() {
+        $('.scan-type-card').removeClass('active');
+        $(this).addClass('active');
+        $(this).find('input[type="radio"]').prop('checked', true);
+    });
+    
+    // Form submission
+    uploadForm.on('submit', function() {
+        submitArea.hide();
+        loadingArea.show();
+    });
+});
+</script>
+{% endblock %}

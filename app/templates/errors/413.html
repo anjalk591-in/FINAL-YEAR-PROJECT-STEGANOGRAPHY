@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}413 - File Too Large{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="bi bi-file-earmark-x" style="font-size: 8rem; color: #ef4444;"></i>
+    </div>
+    <h1 class="display-1 fw-bold">413</h1>
+    <h2 class="mb-3">File Too Large</h2>
+    <p class="lead text-muted mb-4">
+        The uploaded file exceeds the maximum allowed size of <strong>50MB</strong>.
+    </p>
+    <div class="alert alert-info d-inline-block text-start">
+        <h5><i class="bi bi-info-circle"></i> Tips</h5>
+        <ul class="mb-0">
+            <li>Try compressing or resizing the image</li>
+            <li>Convert to a more efficient format (e.g., JPEG)</li>
+            <li>Split into smaller files for batch processing</li>
+        </ul>
+    </div>
+    <div class="mt-4">
+        <a href="{{ url_for('analysis.upload') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-cloud-upload"></i> Try Again
+        </a>
+    </div>
+</div>
+{% endblock %}
